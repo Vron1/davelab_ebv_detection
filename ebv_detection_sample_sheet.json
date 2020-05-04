@@ -1,0 +1,18 @@
+{
+    "samples": [
+        {
+            "paths": {
+                "bam": {
+                    "operation": "AND",
+                    "values": ["picard", "markduplicates", "rna"]
+                },
+                "bam_idx":  {
+                    "operation": "AND",
+                    "values": ["picard", "markduplicates", "rna"]
+                }
+            },
+            "sample_id": null,
+            "sample_name": null
+        }
+    ]
+}
