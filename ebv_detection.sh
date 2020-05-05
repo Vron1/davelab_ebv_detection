@@ -32,3 +32,6 @@ STAR --genomeDir ${REF_IDX} --readFilesIn human_unmapped_to_masked_ebv_STAR1.fas
 
 #STAR RUN for singletons
 STAR --genomeDir ${REF_IDX} --readFilesIn human_unmapped_to_masked_ebv_STARs.fastq --runThreadN ${NTHREADS} --outFilterMismatchNmax ${MISMATCHNMAX} --outFilterMultimapNmax ${MULTIMAPNMAX} --limitOutSAMoneReadBytes ${SAMREADBYTES} --outFileNamePrefix ${OUT_PREF_SINGLE}
+
+ls -ltr
+ls -ltr /data/ebv_detection/output/

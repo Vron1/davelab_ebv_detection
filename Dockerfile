@@ -39,4 +39,4 @@ RUN pip install pysam
 ADD https://api.github.com/repos/Vron1/davelab_ebv_detection/git/refs/heads/ version.json
 RUN git clone https://github.com/Vron1/davelab_ebv_detection.git
 RUN cp davelab_ebv_detection/ebv_detection.sh .
-RUN cp davelab_ebv_detection/masked_ebv_genome_idx_STAR .
+RUN cp -r davelab_ebv_detection/masked_ebv_genome_idx_STAR .
