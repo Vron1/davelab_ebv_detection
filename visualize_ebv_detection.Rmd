@@ -1,0 +1,164 @@
+---
+title: "Visualize EBV Detection"
+author: "Veronica Russell, Dr. Dave Lab Rotation"
+date: "5/6/2020"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+#Description:
+##INPUT: 
+Script takes as input a user constructed .csv file titled "star_ebvmasked_count_f4F1024.csv" with the following column headers [required headers are sample_id, analysis_id, ebv_positive, sample_type, mean_coverage, ebv_count, and unique_ebv_count]
+It is recommended to have more than 5 samples per panel
+
+
+__________________________________________________
+####required column headers:
+sample_id - davelab Sample Id of form #_T_1
+
+analysis_id - davelab Analysis ID number
+
+panel - categorical "1MB", "8MB", "110MB", or "other"
+
+ebv_positive - categorical "yes", "weak", "no", "unknown" known EBV positive sample, determined from WHO pathology reports at https://who.davelab.org
+
+sample_type - categorical "FFPE","cell line", "other"
+
+mean_coverage - RNA sample mean coverage determined from qc report at db.davelab.org under depth_of_coverage_aligned_read_stats
+
+ebv_count - ebv reads (single) count determined from sum of quantified reads of ebv_detection module output ebv_detection_EBV_detection.{SAMPLE_ID}_A{ANALYSIS_ID}_ebv_paired_Aligned.out.sam and ebv_detection_EBV_detection.{SAMPLE_ID}_A{ANALYSIS_ID}_ebv_singles_Aligned.out.sam
+
+unique_ebv_count - unique read (single) counts determined from sum of unique reads extracted from ebv_detection module output ebv_detection_EBV_detection.{SAMPLE_ID}_A{ANALYSIS_ID}ebv_paired_Log.final.out and ebv_detection_EBV_detection.{SAMPLE_ID}_A{ANALYSIS_ID}ebv_singles_Log.final.out
+
+
+
+####optional headers 
+*can be used as alternates for mean_coverage at all locations in this script (may require information outside of pathology report, qc report, or ebv_detection analysis):
+
+total_sample_readprs - from qc report at db.davelab.org under Total TNA stats Total Input Read Pairs
+
+total_rna_readprs - from qc report at db.davelab.org under Total TNA stats Total RNA Read Pairs
+
+total_human_unmapped_reads - processed reads reported by samtools view -f4 -F1024 {IN_BAM} -c divided by 2 (for pairs)
+
+mapped_pls_unmapped_reads - processed reads reported by samtools view -F3328 {IN_BAM} -c divided by 2 (for pairs) 
+
+__________________________________________________
+
+##OUTPUT
+1) Visualization summary plot of full .csv file and all panels
+2) Visualization of individual panels
+
+
+#Setup:
+##Knitr Setup
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Load Libaries
+```{r}
+library(ggplot2)
+library(tidyverse)
+```
+
+##Set themes (provided by Dr. Sara Selitsky)
+```{r}
+theme_sara_90 <- function() {
+  theme_bw(base_size=14)+
+    theme(axis.text.x=element_text(angle=90,hjust = 1,vjust = 0.5),
+          axis.text=element_text(color="black"),
+          panel.background=element_rect(color="black"),
+          strip.text = element_text(size=12),
+          strip.background = element_rect(fill="white"))
+}
+```
+
+
+##Import data
+```{r}
+star_ebv_data <- read.csv(file='star_counts_ebvmasked_f4F1024.csv')
+head(star_ebv_data)
+```
+
+
+#Data Processing:
+```{r}
+#fix where zero with adding 1/2 smallest zero value to all zeroes then taking log
+star_ebv_data$ebv_count[star_ebv_data$ebv_count==0]<- 1
+star_ebv_data$log_ebv_count <- log(star_ebv_data$ebv_count)
+head(star_ebv_data)
+
+#Split data for panel types included in dataframe
+by_panel <- split(star_ebv_data, star_ebv_data$panel)
+
+#select column variable indicative of graph point size (default=mean_coverage)
+#if using optional column headers can replace "mean_coverage" with any desired measure of sample total reads or quality
+size_var=star_ebv_data$mean_coverage
+```
+
+#Graphs:
+##Metadata Sample Coverage Boxplots
+```{r}
+ggplot(star_ebv_data, aes(x=panel, y=mean_coverage))+xlab("panel")+ylab("mean_coverage")+geom_boxplot()
+```
+
+
+##All Panel Summary Graph
+```{r}
+#if using optional column headers can replace "mean_coverage" with any desired measure of sample total reads or quality
+gg_star_all_samples <- ggplot(star_ebv_data, aes(x=reorder(sample_id, log_ebv_count), y=log_ebv_count, color=ebv_positive, size=size_var)) + geom_point(aes(shape=panel), alpha=0.4) +   scale_color_manual(name = "Known EBV Status",
+                     values = c("yes" = "green",
+                                "weak" = "blue",
+                                "no" = "red",
+                                "unknown" = "gray"),
+                     labels = c("yes" = "Positive",
+                                "weak" = "Weak Positive",
+                                "no" = "Negative",
+                                "unknown" = "Unknown")) +
+scale_shape_manual(name = "Davelab Panel",
+                   values=c("1MB" = 17,
+                            "8MB" = 15,
+                            "110MB" = 16,
+                            "other" = 18)) +
+scale_size_continuous(name="Mean RNA Coverage") +
+theme_sara_90() + labs(title="STAR Log(EBV Read Count) by Sample ID", x="Sample ID", y="Log(EBV Read Counts)")
+
+gg_star_all_samples
+```
+
+
+##Individual Panels Graphs
+```{r}
+
+for (x in names(by_panel)) {
+  panel <- subset(star_ebv_data, panel==x)
+  #if using optional column headers can replace "mean_coverage" with any desired measure of sample total reads or quality
+  size_var2 <- panel$mean_coverage
+  plot_title=paste("gg_star_",x,"_panel",sep="")
+  plot_title <- ggplot(panel, aes(x=reorder(sample_id, log_ebv_count), y=log_ebv_count, color=ebv_positive, size=size_var2)) + geom_point(aes(shape=panel), alpha=0.4) + 
+     scale_color_manual(name = "Known EBV Status",
+                     values = c("yes" = "green",
+                                "weak" = "blue",
+                                "no" = "red",
+                                "unknown" = "gray"),
+                     labels = c("yes" = "Positive",
+                                "weak" = "Weak Positive",
+                                "no" = "Negative",
+                                "unknown" = "Unknown")) +
+      scale_shape_manual(name = "Davelab Panel",
+                     values=c("1MB" = 17,
+                              "8MB" = 15,
+                              "110MB" = 16,
+                              "other" = 18)) +
+     scale_size_continuous(name="Mean RNA Coverage") +
+     theme_sara_90() + labs(title=paste(x,"STAR Log(EBV Read Count) by Sample ID",sep=" "), x="Sample ID", y="Log(EBV Read Counts)")
+
+  print(plot_title)
+}
+
+```
+
+
