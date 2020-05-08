@@ -1,5 +1,5 @@
 #!usr/bin/sh
-#Verionica Russell
+#Veronica Russell
 #05/06/20
 
 #This script takes as INPUT the davelab Sample ID and four files corresponding to a single sample run through the ebv_detection module:
