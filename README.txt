@@ -16,8 +16,8 @@ Detection of Epstein-Barr virus presence from tumor sample sequencing data from 
 
 FULL ROTATION PROJECT AND MODULE SCRIPT INVENTORY AND LOCATIONS:
 
-Dockerfile - sets up docker environment specific to module (basic ubuntu functionality, STAR, samtools)
--location: copy at github Vron1/davelab_ebv_detection, hosted on docker container
+Dockerfile - used to set up docker environment specific to module (basic ubuntu functionality, STAR, samtools)
+-location: at github Vron1/davelab_ebv_detection
 
 ebv_detection.sh - bash file used by EBV_detection.py, takes sample rna bam files after alignment to human genome in davelab pipeline and aligns human unmapped, non-PCR duplicate reads to masked ebv genome
 -location: copy at github Vron1/davelab_ebv_detection, hosted on docker container
